@@ -1,14 +1,28 @@
 const express = require('express');
-const app = express();
+const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const config = require('./config');
 
-const API_SECRET = config.ZOOM_API_SECRET;
+const app = express();
 const VERIFICATION_TOKEN = config.VERIFICATION_TOKEN;
-
 const zoomRoutes = require('./Routes/zoomRoutes');
 
-// const token = jwt.sign(payload, API_SECRET);
+(async function () {
+  try {
+    await mongoose
+      .connect(config.DB, {
+        useNewUrlParser: true,
+        useCreateIndex: true,
+        useFindAndModify: false,
+        useUnifiedTopology: true
+      })
+      .then((res) => {
+        console.log('Connected to DB'), (DB = res);
+      });
+  } catch (err) {
+    console.log('Error connecting to DB', err);
+  }
+})();
 
 app.post(
   '/participants',
@@ -23,8 +37,6 @@ app.post(
     } catch (err) {
       res.status(400).send(`Webhook Error: ${err.message}`);
     }
-
-    // console.log(eventObj);
     if (req.headers.authorization === VERIFICATION_TOKEN) {
       const meetingID = eventObj.payload.object.id;
       console.log(meetingID);
@@ -36,9 +48,8 @@ app.post(
           name: participant.user_name,
           joinTime: participant.join_time
         };
-        // take the participant count from meeting and add 1
 
-        console.log(participantJoinDetails);
+        // console.log(participantJoinDetails);
       } else if (eventObj.event === 'meeting.participant_left') {
         console.log('participant left meeting');
         let participant = eventObj.payload.object.participant;
@@ -49,24 +60,22 @@ app.post(
           leaveTime: participant.leave_time
         };
         // calculate the duration of the meeting
-        console.log(participantLeftDetails);
+        // console.log(participantLeftDetails);
       } else if (eventObj.event === 'meeting.started') {
-        console.log('meeting started');
         let meetingObj = {
           topic: eventObj.payload.object.topic,
-          date: eventObj.payload.object.start_time,
+          startTime: eventObj.payload.object.start_time,
           meetingID: meetingID
         };
-        console.log(meetingObj);
+        zoomRoutes.meetingStarted(meetingObj);
       } else if (eventObj.event === 'meeting.ended') {
         let meetingObj = {
           topic: eventObj.payload.object.topic,
-          date: eventObj.payload.object.start_time,
+          leaveTime: eventObj.payload.object.end_time,
+          startTime: eventObj.payload.object.start_time,
           meetingID: meetingID
         };
-        console.log('meeting ended');
-        console.log(meetingObj);
-        // update participant count only if the duration is greater than 70%
+        zoomRoutes.meetingEnded(meetingObj);
       }
     } else {
       res.status(403).end('Access forbidden');
@@ -75,4 +84,8 @@ app.post(
   }
 );
 
-module.exports = app;
+const port = 5000;
+
+app.listen(port, () => {
+  console.log(`App running on port ${port} ...`);
+});
