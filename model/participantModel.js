@@ -6,14 +6,14 @@ const participantSchema = new mongoose.Schema({
     ref: 'meetings',
     required: true
   },
-  Name: {
-    type: Number
+  userID: {
+    type: Number,
+    unique: true
   },
+  name: String,
   joinTime: Date,
   leaveTime: Date,
-  duration: {
-    type: Number
-  }
+  duration: Number
 });
 
 const Participant = mongoose.model('Participants', participantSchema);
