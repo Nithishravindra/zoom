@@ -65,15 +65,15 @@ exports.meetingEnded = async (meetingObj) => {
 
   if (res === 0) return;
 
-  // const filterObj = { meetindID: meetingObj.meetindID };
-  // const updateObj = {
-  //   endTime: meetingObj.leaveTime,
-  //   duration: res
-  // };
+  const filterObj = { meetindID: meetingObj.meetindID };
+  const updateObj = {
+    endTime: meetingObj.leaveTime,
+    duration: res
+  };
 
-  // await Meeting.findOneAndUpdate(filterObj, updateObj, {
-  //   new: true
-  // });
+  await Meeting.findOneAndUpdate(filterObj, updateObj, {
+    new: true
+  });
 
   console.log(meetingObj);
   const finalMeetingDetails = await Participant.aggregate([
@@ -97,6 +97,5 @@ exports.meetingEnded = async (meetingObj) => {
   console.log(finalMeetingDetails);
 
   createExcel.makeExcelMail(finalMeetingDetails);
-
   console.log('Meeting endededed');
 };

@@ -23,9 +23,7 @@ const zoomRoutes = require('./zoomRoutes');
 })();
 
 app.post('/participants', bodyParser.raw({ type: 'application/json' }), (req, res) => {
-  console.log(
-    '-----------------------------------------------------------------------------'
-  );
+  console.log('---------------------------------------------------');
   let eventObj;
   try {
     eventObj = JSON.parse(req.body);
@@ -74,7 +72,6 @@ app.post('/participants', bodyParser.raw({ type: 'application/json' }), (req, re
         startTime: eventObj.payload.object.start_time,
         meetingID: meetingID
       };
-      console.log(meetingObj);
       zoomRoutes.meetingEnded(meetingObj);
     }
   } else {

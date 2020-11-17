@@ -5,7 +5,6 @@ exports.makeExcelMail = async (data) => {
   let worksheet = workbook.addWorksheet('Participants');
   worksheet.columns = [
     { header: 'Name', key: 'name' },
-    // { header: 'MeetingID', key: 'meetingID' },
     { header: 'JoinTime', key: 'joinTime' },
     { header: 'LeaveTime', key: 'leaveTime' },
     { header: 'Duration', key: 'duration' }
