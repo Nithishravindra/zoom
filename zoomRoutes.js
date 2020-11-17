@@ -4,9 +4,6 @@ const createExcel = require('./excel');
 
 function calculateTimedifference(d1, d2) {
   const diff = (d2.getTime() - d1.getTime()) / 1000;
-  console.log('start ', d1.getTime());
-  console.log('leave ', d2.getTime());
-  console.log('diff ', diff);
 
   if (diff < 0) return 0;
 
@@ -61,36 +58,45 @@ exports.participantLeft = async (participantDetails) => {
 };
 
 exports.meetingEnded = async (meetingObj) => {
-  console.log(meetingObj);
   const d1 = new Date(meetingObj.startTime);
   const d2 = new Date(meetingObj.leaveTime);
-  console.log('d1 start ', d1);
-  console.log('d2 leave ', d2);
 
   const res = calculateTimedifference(d1, d2);
 
-  console.log(res, 'duration of meeting in meetingEnded export');
   if (res === 0) return;
 
-  const filterObj = { meetindID: meetingObj.meetindID };
-  const updateObj = {
-    endTime: meetingObj.leaveTime,
-    duration: res
-  };
+  // const filterObj = { meetindID: meetingObj.meetindID };
+  // const updateObj = {
+  //   endTime: meetingObj.leaveTime,
+  //   duration: res
+  // };
 
-  await Meeting.findOneAndUpdate(filterObj, updateObj, {
-    new: true
-  });
+  // await Meeting.findOneAndUpdate(filterObj, updateObj, {
+  //   new: true
+  // });
 
-  const query = { meetingID: meetingObj.meetingID };
-  const finalMeetingDetails = await Participant.find(query);
-
-  let r = createExcel.makeExcelMail(finalMeetingDetails);
-
-  console.log('if RES of exel');
-  console.log(r);
-
+  console.log(meetingObj);
+  const finalMeetingDetails = await Participant.aggregate([
+    {
+      $match: { meetingID: meetingObj.meetingID }
+    },
+    {
+      $project: {
+        _id: 0,
+        name: 1,
+        duration: 1,
+        joinTime: {
+          $dateToString: { format: '%H:%M:%S:%L%z', date: '$joinTime' }
+        },
+        leaveTime: {
+          $dateToString: { format: '%H:%M:%S:%L%z', date: '$leaveTime' }
+        }
+      }
+    }
+  ]);
   console.log(finalMeetingDetails);
+
+  createExcel.makeExcelMail(finalMeetingDetails);
 
   console.log('Meeting endededed');
 };
