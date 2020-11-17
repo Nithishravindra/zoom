@@ -5,7 +5,7 @@ const config = require('./config');
 
 const app = express();
 const VERIFICATION_TOKEN = config.VERIFICATION_TOKEN;
-const zoomRoutes = require('./Routes/zoomRoutes');
+const zoomRoutes = require('./zoomRoutes');
 
 (async function () {
   try {
@@ -60,6 +60,7 @@ app.post('/participants', bodyParser.raw({ type: 'application/json' }), (req, re
 
       zoomRoutes.participantLeft(participantLeftDetails);
     } else if (eventObj.event === 'meeting.started') {
+      console.log('meeting started');
       let meetingObj = {
         topic: eventObj.payload.object.topic,
         startTime: eventObj.payload.object.start_time,
@@ -73,7 +74,7 @@ app.post('/participants', bodyParser.raw({ type: 'application/json' }), (req, re
         startTime: eventObj.payload.object.start_time,
         meetingID: meetingID
       };
-
+      console.log(meetingObj);
       zoomRoutes.meetingEnded(meetingObj);
     }
   } else {

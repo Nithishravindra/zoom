@@ -1,11 +1,17 @@
-const Meeting = require('../model/meetingModel');
-const Participant = require('../model/participantModel');
+const Meeting = require('./model/meetingModel');
+const Participant = require('./model/participantModel');
+const createExcel = require('./excel');
 
 function calculateTimedifference(d1, d2) {
   const diff = (d2.getTime() - d1.getTime()) / 1000;
-  if (diff < 10) return 0;
+  console.log('start ', d1.getTime());
+  console.log('leave ', d2.getTime());
+  console.log('diff ', diff);
+
+  if (diff < 0) return 0;
 
   const durationInMins = Math.round(diff / 60);
+
   return durationInMins;
 }
 
@@ -32,6 +38,8 @@ exports.participantLeft = async (participantDetails) => {
     meetindID: participantDetails.meetindID
   });
 
+  if (attendee.length == 0) return;
+
   const d1 = new Date(attendee[0].joinTime);
   const d2 = new Date(participantDetails.leaveTime);
 
@@ -56,9 +64,12 @@ exports.meetingEnded = async (meetingObj) => {
   console.log(meetingObj);
   const d1 = new Date(meetingObj.startTime);
   const d2 = new Date(meetingObj.leaveTime);
+  console.log('d1 start ', d1);
+  console.log('d2 leave ', d2);
 
   const res = calculateTimedifference(d1, d2);
 
+  console.log(res, 'duration of meeting in meetingEnded export');
   if (res === 0) return;
 
   const filterObj = { meetindID: meetingObj.meetindID };
@@ -72,9 +83,13 @@ exports.meetingEnded = async (meetingObj) => {
   });
 
   const query = { meetingID: meetingObj.meetingID };
-  const finalMeetingDetails = Participant.find(query);
+  const finalMeetingDetails = await Participant.find(query);
 
-  console.log(meet);
+  let r = createExcel.makeExcelMail(finalMeetingDetails);
+
+  console.log('if RES of exel');
+  console.log(r);
+
   console.log(finalMeetingDetails);
 
   console.log('Meeting endededed');
