@@ -1,15 +1,62 @@
 const fs = require('fs');
 const PDFDocument = require('pdfkit');
+const sgMail = require('@sendgrid/mail');
+const config = require('./config');
+sgMail.setApiKey(config.SENDGRID_API_KEY);
 
-function createInvoice(invoice, path) {
+async function sendMail(path) {
+  const pathToAttachment = `${__dirname}/${path}`;
+  const attachment = await fs.readFileSync(pathToAttachment).toString('base64');
+  const msg = {
+    to: [
+      'nithishr.1rn17cs060@gmail.com',
+      'poojadotm702@gmail.com',
+      'nithishravindra8@gmail.com'
+    ],
+    from: 'me@nithishravindra.com',
+    subject: 'Zoom Participants',
+    text: 'Attendes for your class',
+    attachments: [
+      {
+        content: attachment,
+        filename: 'zoomAttendes.pdf',
+        type: 'application/pdf',
+        disposition: 'attachment'
+      }
+    ]
+  };
+
+  sgMail
+    .send(msg)
+    .then(() => {
+      console.log('Mail Sent.');
+      return 200;
+    })
+    .catch((err) => {
+      console.log('Error sending mail.');
+      console.log(err);
+      console.log(err.response.body);
+    });
+}
+
+async function createPDF(meeting, finalParticipantsDetails, path) {
   let doc = new PDFDocument({ size: 'A4', margin: 50, bufferPages: true });
 
   generateHeader(doc);
-  generateMeetingInformation(doc, invoice);
-  generateParticipantsTable(doc, invoice);
+  generateMeetingInformation(doc, meeting[0]);
+  generateParticipantsTable(doc, finalParticipantsDetails);
 
   doc.end();
-  doc.pipe(fs.createWriteStream(path));
+  await doc.pipe(fs.createWriteStream(path));
+
+  try {
+    if (fs.existsSync(path)) {
+      return await sendMail(path);
+    }
+  } catch (e) {
+    console.log(e);
+    return 400;
+  }
 }
 
 function generateHeader(doc) {
@@ -17,57 +64,32 @@ function generateHeader(doc) {
   generateHr(doc, 120);
 }
 
-const data2 = [
-  {
-    meetingID: 71239134627,
-    topic: "1RN17CS060 Nithish R's Zoom Meeting",
-    startTime: '2020-11-17T12:52:08.000Z',
-    duration: 104,
-    endTime: '2020-11-17T14:35:38.000Z'
-  }
-];
-
-const data1 = [
-  {
-    name: '1RN17CS060 Nithish R',
-    duration: 103,
-    joinTime: '12:52:08:000+0000',
-    leaveTime: '14:35:37:000+0000'
-  },
-  {
-    name: ' Ran',
-    duration: 70,
-    joinTime: '12:54:00:000+0000',
-    leaveTime: '14:04:18:000+0000'
-  }
-];
-function generateMeetingInformation(doc, invoice) {
-  const info = data2[0];
+function generateMeetingInformation(doc, meeting) {
   doc
     .fontSize(10)
     .font('Helvetica')
-    .text(`Meeting: ${info.meetingID}`, 50)
-    .text(`Duration: ${info.duration}`, 50)
-    .text(`Topic : ${info.topic}`, 50)
-    .text(`Start Time : ${info.startTime}`, 50)
-    .text(`Leave Time : ${info.leaveTime}`, 50)
+    .text(`Meeting: ${meeting.meetingID}`, 50)
+    .text(`Duration: ${meeting.duration}`, 50)
+    .text(`Topic : ${meeting.topic}`, 50)
+    .text(`Start Time : ${meeting.startTime}`, 50)
+    .text(`Leave Time : ${meeting.endTime}`, 50)
     .moveDown();
 }
 
-function generateParticipantsTable(doc, invoice) {
-  let i = 0,
-    first = 0,
-    rest = 0;
-  let invoiceTableTop = 140;
+function generateParticipantsTable(doc, participants) {
+  let align = 0,
+    firstPageCount = 0,
+    otherPageCount = 0,
+    tableTop = 140;
 
   doc.font('Helvetica-Bold');
-  generateTableRow(doc, invoiceTableTop, 'Name', 'Join Time', 'Leave Time', 'Duration');
-  generateHr(doc, invoiceTableTop + 20);
+  generateTableRow(doc, tableTop, 'Name', 'Join Time', 'Leave Time', 'Duration');
+  generateHr(doc, tableTop + 20);
   doc.font('Helvetica');
 
-  data1.forEach((item) => {
-    const position = invoiceTableTop + (i + 1) * 30;
-    console.log('position', position, 'i = ', i);
+  participants.forEach((item) => {
+    const position = tableTop + (align + 1) * 30;
+
     generateTableRow(
       doc,
       position,
@@ -76,15 +98,16 @@ function generateParticipantsTable(doc, invoice) {
       item.leaveTime,
       item.duration
     );
-    i++;
-    first++;
-    rest++;
-    if (first === 21 || rest % 25 === 0) {
+
+    align++;
+    firstPageCount++;
+    otherPageCount++;
+
+    if (firstPageCount === 21 || otherPageCount % 25 === 0) {
       doc.addPage();
-      invoiceTableTop = 0;
-      i = 0;
-      rest = 0;
-      console.log('HELLO');
+      tableTop = 0;
+      align = 0;
+      otherPageCount = 0;
     }
   });
 }
@@ -94,7 +117,7 @@ function generateTableRow(doc, y, name, joinTime, leaveTime, duration) {
     .fontSize(10)
     .text(name, 50, y)
     .text(joinTime, 200, y)
-    .text(leaveTime, 300, y, { width: 90, align: 'right' })
+    .text(leaveTime, 320, y)
     .text(duration, 400, y, { width: 90, align: 'right' });
 }
 
@@ -102,4 +125,6 @@ function generateHr(doc, y) {
   doc.strokeColor('#aaaaaa').lineWidth(1).moveTo(50, y).lineTo(550, y).stroke();
 }
 
-createInvoice();
+module.exports = {
+  createPDF
+};

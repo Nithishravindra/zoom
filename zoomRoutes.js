@@ -1,6 +1,6 @@
 const Meeting = require('./model/meetingModel');
 const Participant = require('./model/participantModel');
-const createExcel = require('./excel');
+const pdfnMail = require('./genratePDF');
 
 function calculateTimedifference(d1, d2) {
   const diff = (d2.getTime() - d1.getTime()) / 1000;
@@ -60,25 +60,25 @@ exports.participantLeft = async (participantDetails) => {
 exports.meetingEnded = async (meetingObj) => {
   const d1 = new Date(meetingObj.startTime);
   const d2 = new Date(meetingObj.leaveTime);
+  const meetingID = meetingObj.meetingID;
 
   const res = calculateTimedifference(d1, d2);
 
   if (res === 0) return;
 
-  // const filterObj = { meetindID: meetingObj.meetindID };
-  // const updateObj = {
-  //   endTime: meetingObj.leaveTime,
-  //   duration: res
-  // };
+  const filterObj = { meetingID: meetingID };
+  const updateObj = {
+    endTime: meetingObj.leaveTime,
+    duration: res
+  };
 
-  // await Meeting.findOneAndUpdate(filterObj, updateObj, {
-  //   new: true
-  // });
+  await Meeting.findOneAndUpdate(filterObj, updateObj, {
+    new: true
+  });
 
-  console.log(meetingObj);
   const finalParticipantsDetails = await Participant.aggregate([
     {
-      $match: { meetingID: meetingObj.meetingID }
+      $match: { meetingID: meetingID }
     },
     {
       $project: {
@@ -96,15 +96,23 @@ exports.meetingEnded = async (meetingObj) => {
   ]);
 
   const meeting = await Meeting.find(
-    { meetingID: meetingObj.meetingID },
+    { meetingID: meetingID },
     {
       _id: 0,
       __v: 0
     }
   );
 
-  console.log(finalParticipantsDetails);
+  const path = `zoomAttendee_${meetingID}.pdf`;
+  const resMail = await pdfnMail.createPDF(meeting, finalParticipantsDetails, path);
 
-  await createExcel.makeExcelMail(finalParticipantsDetails, meeting);
-  console.log('Meeting endededed');
+  // meeintID to be replaced
+  if (resMail === 200) {
+    const meetingDoc = await Meeting.deleteOne({ meetingID: 12341234 });
+    const participantDoc = await Participant.deleteMany({ meetingID: 12341234 });
+
+    if (meetingDoc.deletedCount === 1 && participantDoc.deletedCount >= 1) {
+      console.log('App worked. Woho!');
+    }
+  }
 };
