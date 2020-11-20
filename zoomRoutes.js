@@ -65,18 +65,18 @@ exports.meetingEnded = async (meetingObj) => {
 
   if (res === 0) return;
 
-  const filterObj = { meetindID: meetingObj.meetindID };
-  const updateObj = {
-    endTime: meetingObj.leaveTime,
-    duration: res
-  };
+  // const filterObj = { meetindID: meetingObj.meetindID };
+  // const updateObj = {
+  //   endTime: meetingObj.leaveTime,
+  //   duration: res
+  // };
 
-  await Meeting.findOneAndUpdate(filterObj, updateObj, {
-    new: true
-  });
+  // await Meeting.findOneAndUpdate(filterObj, updateObj, {
+  //   new: true
+  // });
 
   console.log(meetingObj);
-  const finalMeetingDetails = await Participant.aggregate([
+  const finalParticipantsDetails = await Participant.aggregate([
     {
       $match: { meetingID: meetingObj.meetingID }
     },
@@ -94,8 +94,17 @@ exports.meetingEnded = async (meetingObj) => {
       }
     }
   ]);
-  console.log(finalMeetingDetails);
 
-  createExcel.makeExcelMail(finalMeetingDetails);
+  const meeting = await Meeting.find(
+    { meetingID: meetingObj.meetingID },
+    {
+      _id: 0,
+      __v: 0
+    }
+  );
+
+  console.log(finalParticipantsDetails);
+
+  await createExcel.makeExcelMail(finalParticipantsDetails, meeting);
   console.log('Meeting endededed');
 };

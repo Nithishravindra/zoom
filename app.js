@@ -7,6 +7,13 @@ const app = express();
 const VERIFICATION_TOKEN = config.VERIFICATION_TOKEN;
 const zoomRoutes = require('./zoomRoutes');
 
+meetingObj = {
+  leaveTime: '2020-11-17T14:35:38.000+00:00',
+  startTime: '2020-11-17T12:52:08.000+00:00',
+  meetingID: 71239134627
+};
+zoomRoutes.meetingEnded(meetingObj);
+
 (async function () {
   try {
     await mongoose
