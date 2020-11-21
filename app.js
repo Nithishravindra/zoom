@@ -23,7 +23,11 @@ const zoomRoutes = require('./zoomRoutes');
 })();
 
 app.post('/participants', bodyParser.raw({ type: 'application/json' }), (req, res) => {
-  console.log('---------------------------------------------------');
+  function Response(statusCode, msg) {
+    console.log(statusCode, msg);
+    return res.status(statusCode).send(msg);
+  }
+
   let eventObj;
   try {
     eventObj = JSON.parse(req.body);
@@ -32,7 +36,6 @@ app.post('/participants', bodyParser.raw({ type: 'application/json' }), (req, re
   }
   if (req.headers.authorization === VERIFICATION_TOKEN) {
     const meetingID = eventObj.payload.object.id;
-    console.log(meetingID);
 
     if (eventObj.event === 'meeting.participant_joined') {
       console.log('participant joined meeting');
@@ -44,7 +47,10 @@ app.post('/participants', bodyParser.raw({ type: 'application/json' }), (req, re
         userID: participant.user_id
       };
 
-      zoomRoutes.participantJoined(participantJoinDetails);
+      const result = zoomRoutes.participantJoined(participantJoinDetails);
+
+      if (result === 200) Response(200, 'Participant Joined');
+      else Response(400, 'Error occurred at Participant.Joined');
     } else if (eventObj.event === 'meeting.participant_left') {
       console.log('participant left meeting');
       let participant = eventObj.payload.object.participant;
@@ -56,7 +62,10 @@ app.post('/participants', bodyParser.raw({ type: 'application/json' }), (req, re
         userID: participant.user_id
       };
 
-      zoomRoutes.participantLeft(participantLeftDetails);
+      const result = zoomRoutes.participantLeft(participantLeftDetails);
+
+      if (result === 200) Response(200, 'Participant Left');
+      else Response(400, 'Error occurred at Participant.Left');
     } else if (eventObj.event === 'meeting.started') {
       console.log('meeting started');
       let meetingObj = {
@@ -65,14 +74,21 @@ app.post('/participants', bodyParser.raw({ type: 'application/json' }), (req, re
         meetingID: meetingID
       };
 
-      zoomRoutes.meetingStarted(meetingObj);
+      const result = zoomRoutes.meetingStarted(meetingObj);
+
+      if (result === 200) Response(200, 'Meeting Started');
+      else Response(400, 'Error occurred at Meeting.Started');
     } else if (eventObj.event === 'meeting.ended') {
       let meetingObj = {
         leaveTime: eventObj.payload.object.end_time,
         startTime: eventObj.payload.object.start_time,
         meetingID: meetingID
       };
-      zoomRoutes.meetingEnded(meetingObj);
+
+      const result = zoomRoutes.meetingEnded(meetingObj);
+
+      if (result === 200) Response(200, 'Meeting Ended');
+      else Response(400, 'Error occurred at Meeting.Ended');
     }
   } else {
     res.status(403).end('Access forbidden');

@@ -2,11 +2,12 @@ const fs = require('fs');
 const PDFDocument = require('pdfkit');
 const sgMail = require('@sendgrid/mail');
 const config = require('./config');
+const fsx = require('fs').promises;
 sgMail.setApiKey(config.SENDGRID_API_KEY);
 
-async function sendMail(path) {
-  const pathToAttachment = `${__dirname}/${path}`;
-  const attachment = await fs.readFileSync(pathToAttachment).toString('base64');
+async function sendMail(filename) {
+  const attachment = await fsx.readFile(filename, { encoding: 'base64' });
+
   const msg = {
     to: [
       'nithishr.1rn17cs060@gmail.com',
@@ -26,32 +27,33 @@ async function sendMail(path) {
     ]
   };
 
-  sgMail
+  return sgMail
     .send(msg)
     .then(() => {
-      console.log('Mail Sent.');
       return 200;
     })
     .catch((err) => {
       console.log('Error sending mail.');
       console.log(err);
       console.log(err.response.body);
+      return 400;
     });
 }
 
-async function createPDF(meeting, finalParticipantsDetails, path) {
+async function createPDF(meeting, finalParticipantsDetails, filename) {
   let doc = new PDFDocument({ size: 'A4', margin: 50, bufferPages: true });
 
   generateHeader(doc);
   generateMeetingInformation(doc, meeting[0]);
   generateParticipantsTable(doc, finalParticipantsDetails);
 
+  writeStream = await fs.createWriteStream(filename);
+  doc.pipe(writeStream);
   doc.end();
-  await doc.pipe(fs.createWriteStream(path));
 
   try {
-    if (fs.existsSync(path)) {
-      return await sendMail(path);
+    if (fs.existsSync(filename)) {
+      return await sendMail(filename);
     }
   } catch (e) {
     console.log(e);
