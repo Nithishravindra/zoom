@@ -9,11 +9,7 @@ async function sendMail(filename) {
   const attachment = await fsx.readFile(filename, { encoding: 'base64' });
 
   const msg = {
-    to: [
-      'nithishr.1rn17cs060@gmail.com',
-      'poojadotm702@gmail.com',
-      'nithishravindra8@gmail.com'
-    ],
+    to: [config.emailID1, config.emailID2, config.emailIDe],
     from: 'me@nithishravindra.com',
     subject: 'Zoom Participants',
     text: 'Attendes for your class',
@@ -47,7 +43,7 @@ async function createPDF(meeting, finalParticipantsDetails, filename) {
   generateMeetingInformation(doc, meeting[0]);
   generateParticipantsTable(doc, finalParticipantsDetails);
 
-  writeStream = await fs.createWriteStream(filename);
+  writeStream = fs.createWriteStream(filename);
   doc.pipe(writeStream);
   doc.end();
 

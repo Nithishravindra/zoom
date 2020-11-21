@@ -5,7 +5,7 @@ const config = require('./config');
 
 const app = express();
 const VERIFICATION_TOKEN = config.VERIFICATION_TOKEN;
-const zoomRoutes = require('./zoomRoutes');
+const zoomRoutes = require('./zoom');
 
 (async function () {
   try {
