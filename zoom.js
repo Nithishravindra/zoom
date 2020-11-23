@@ -18,9 +18,8 @@ exports.meetingStarted = async (meetingObj) => {
       meetingID: meetingObj.meetingID,
       topic: meetingObj.topic,
       startTime: meetingObj.startTime
-    }).then(() => {
-      return 200;
     });
+    return 200;
   } catch (e) {
     console.log('Error posting meeting', e);
     console.log(meetingObj);
@@ -35,9 +34,8 @@ exports.participantJoined = async (participantDetails) => {
       name: participantDetails.name,
       joinTime: participantDetails.joinTime,
       userID: participantDetails.userID
-    }).then(() => {
-      return 200;
     });
+    return 200;
   } catch (e) {
     console.log('Error in participant.joined', e);
     console.log(participantDetails);

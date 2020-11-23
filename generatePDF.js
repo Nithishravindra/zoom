@@ -9,7 +9,7 @@ async function sendMail(filename) {
   const attachment = await fsx.readFile(filename, { encoding: 'base64' });
 
   const msg = {
-    to: [config.emailID1, config.emailID2, config.emailIDe],
+    to: [config.EMAILID1, config.EMAILID2, config.EMAILID3],
     from: 'me@nithishravindra.com',
     subject: 'Zoom Participants',
     text: 'Attendes for your class',

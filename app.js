@@ -7,6 +7,13 @@ const app = express();
 const VERIFICATION_TOKEN = config.VERIFICATION_TOKEN;
 const zoomRoutes = require('./zoom');
 
+// let meetingObj = {
+//   leaveTime: '2020-11-21T17:32:52.000+00:00',
+//   startTime: '2020-11-21T17:29:27.000+00:00',
+//   meetingID: 75877312027
+// };
+// zoomRoutes.meetingEnded(meetingObj);
+
 (async function () {
   try {
     await mongoose
@@ -48,7 +55,7 @@ app.post('/participants', bodyParser.raw({ type: 'application/json' }), (req, re
       };
 
       const result = zoomRoutes.participantJoined(participantJoinDetails);
-
+      console.log(result);
       if (result === 200) Response(200, 'Participant Joined');
       else Response(400, 'Error occurred at Participant.Joined');
     } else if (eventObj.event === 'meeting.participant_left') {

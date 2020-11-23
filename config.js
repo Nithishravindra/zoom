@@ -1,8 +1,9 @@
 require('dotenv').config();
 module.exports = {
-  ZOOM_API_KEY: process.env.ZOOM_API_KEY,
-  ZOOM_API_SECRET: process.env.ZOOM_API_SECRET,
   VERIFICATION_TOKEN: process.env.VERIFICATION_TOKEN,
   DB: process.env.DB,
-  SENDGRID_API_KEY: process.env.SENDGRID_API_KEY
+  SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
+  EMAILID1: process.env.EMAILID1,
+  EMAILID2: process.env.EMAILID2,
+  EMAILID3: process.env.EMAILID3
 };
